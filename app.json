@@ -36,6 +36,12 @@
           "locationWhenInUsePermission": "Braap Labs uses GPS to measure jump speed and distance."
         }
       ]
-    ]
+    ],
+    "owner": "apollo2113",
+    "extra": {
+      "eas": {
+        "projectId": "braap-labs"
+      }
+    }
   }
 }
