@@ -1,0 +1,41 @@
+{
+  "expo": {
+    "name": "Braap Labs",
+    "slug": "braap-labs",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0a0900"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.braaplabs.app",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Braap Labs uses GPS to measure your jump speed and distance.",
+        "NSMotionUsageDescription": "Braap Labs uses the accelerometer and gyroscope to detect jumps and measure airtime."
+      }
+    },
+    "android": {
+      "package": "com.braaplabs.app",
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "BODY_SENSORS",
+        "HIGH_SAMPLING_RATE_SENSORS"
+      ]
+    },
+    "plugins": [
+      "expo-keep-awake",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Braap Labs uses GPS to measure jump speed and distance."
+        }
+      ]
+    ]
+  }
+}
