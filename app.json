@@ -29,7 +29,6 @@
       ]
     },
     "plugins": [
-      "expo-keep-awake",
       [
         "expo-location",
         {
