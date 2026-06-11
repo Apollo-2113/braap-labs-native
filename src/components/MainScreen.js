@@ -11,11 +11,7 @@ import { useSession } from '../hooks/useSession';
 import { PRESETS } from '../engine/fsm';
 import { GOLDEN, SW } from '../theme/colors';
 import GaugeG from './GaugeG';
-import SpeedDisplay from './SpeedDisplay';
-import NixieRow from './NixieRow';
-import Waveform from './Waveform';
-import JumpLog from './JumpLog';
-import CalibrationModal from './CalibrationModal';
+import { SpeedDisplay, NixieRow, Waveform, JumpLog, CalibrationModal } from './index';
 
 const { width } = Dimensions.get('window');
 
