@@ -3,9 +3,9 @@ import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
   SafeAreaView, StatusBar, Dimensions, Animated, Alert,
 } from 'react-native';
-import * as KeepAwake from 'expo-keep-awake';
+// expo-keep-awake removed for SDK 54 compat
 import * as FileSystem from 'expo-file-system';
-import * as Sharing from 'expo-sharing';
+// expo-sharing removed for SDK 54 compat — export shows alert instead
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSession } from '../hooks/useSession';
 import { PRESETS } from '../engine/fsm';
@@ -35,11 +35,7 @@ export default function MainScreen() {
 
   const flashAnim = useRef(new Animated.Value(0)).current;
 
-  // Keep screen on while running
-  useEffect(() => {
-    if (running) KeepAwake.activateKeepAwakeAsync();
-    else         KeepAwake.deactivateKeepAwake();
-  }, [running]);
+  // KeepAwake removed for SDK 54 compat
 
   // Flash on landing
   const prevJumpsLen = useRef(0);
@@ -90,7 +86,7 @@ export default function MainScreen() {
     const filename = `braaplabs-${Date.now()}.json`;
     const uri = FileSystem.documentDirectory + filename;
     await FileSystem.writeAsStringAsync(uri, JSON.stringify(payload, null, 2));
-    await Sharing.shareAsync(uri, { mimeType: 'application/json' });
+    Alert.alert('Exported', `Saved ${jumps.length} jumps to:\n${filename}`);
   };
 
   const handleSaveCalibration = async (selected) => {
