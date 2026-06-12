@@ -282,6 +282,11 @@ export default function MainScreen() {
         <NixieRow T={T} airtime={airDisplay} distance={activeLastJump?.distanceFt??null}
           jumpCount={activeJumps.length} inFlight={activeAir!==null} />
 
+        {/* ── WAVEFORM ── */}
+        <Waveform T={T} gForce={activeGForce} sampleHz={sampleHz}
+          ffThreshold={activeCfg.ff} landThreshold={activeCfg.land}
+          running={activeRunning} jumps={activeJumps} />
+
         {/* ── BIKE TOGGLE ── */}
         <BikeToggle T={T} bikeType={bikeType} disabled={activeRunning}
           onSelect={type => { if(!activeRunning){ setBikeType(type); setCustomCfg(null); } }}
@@ -465,6 +470,80 @@ function NixieRow({ T, airtime, distance, jumpCount, inFlight }) {
   );
 }
 
+// ── Waveform ────────────────────────────────────
+const HIST = 200;
+function Waveform({ T, gForce, sampleHz, ffThreshold, landThreshold, running, jumps }) {
+  const histRef  = useRef(new Array(HIST).fill(1.0));
+  const headRef  = useRef(0);
+  const svgW     = W - 24;
+  const svgH     = 130;
+  const PAD      = 8;
+  const DH       = svgH - PAD * 2;
+  const yMax     = 4.0;
+
+  // Push new sample
+  useEffect(() => {
+    histRef.current[headRef.current % HIST] = gForce;
+    headRef.current++;
+  }, [gForce]);
+
+  // Build SVG path from ring buffer
+  const pts = [];
+  for (let i = 0; i < HIST; i++) {
+    const idx = (headRef.current - HIST + i + HIST) % HIST;
+    const v   = histRef.current[idx];
+    const x   = (i / (HIST - 1)) * svgW;
+    const y   = PAD + DH - Math.min(1, v / yMax) * DH;
+    pts.push(`${i === 0 ? 'M' : 'L'} ${x.toFixed(1)} ${y.toFixed(1)}`);
+  }
+  const pathD = pts.join(' ');
+
+  // Threshold Y positions
+  const ffY   = PAD + DH - (ffThreshold / yMax) * DH;
+  const ldY   = PAD + DH - (landThreshold / yMax) * DH;
+
+  // Grid lines
+  const gridLines = [];
+  for (let i = 1; i < 8; i++) {
+    const y = PAD + (DH / 8) * i;
+    gridLines.push(<Line key={`h${i}`} x1="0" y1={y} x2={svgW} y2={y}
+      stroke={T.border} strokeWidth="0.5" opacity="0.6"/>);
+    const x = (svgW / 8) * i;
+    gridLines.push(<Line key={`v${i}`} x1={x} y1={PAD} x2={x} y2={svgH - PAD}
+      stroke={T.border} strokeWidth="0.5" opacity="0.4"/>);
+  }
+
+  return (
+    <View style={[s.waveBox, { backgroundColor: T.bg2, borderColor: T.border2 }]}>
+      <View style={[s.waveHeader, { borderBottomColor: T.border }]}>
+        <Text style={{ color: T.chromeDim, fontSize: 9, fontFamily:'monospace', letterSpacing: 1 }}>
+          ACCEL. MAGNITUDE — FILTERED
+        </Text>
+        <Text style={{ color: T.chromeDim, fontSize: 9, fontFamily:'monospace' }}>
+          {sampleHz} Hz
+        </Text>
+      </View>
+      <Svg width={svgW} height={svgH}>
+        {/* Grid */}
+        {gridLines}
+        {/* FF threshold */}
+        <Line x1="0" y1={ffY} x2={svgW} y2={ffY}
+          stroke={T.green} strokeWidth="1" strokeDasharray="4 6" opacity="0.7"/>
+        <SvgText x="4" y={ffY - 3} fontSize="8" fill={T.green} opacity="0.8"
+          fontFamily="monospace">{ffThreshold}G</SvgText>
+        {/* Land threshold */}
+        <Line x1="0" y1={ldY} x2={svgW} y2={ldY}
+          stroke={T.red} strokeWidth="1" strokeDasharray="4 6" opacity="0.7"/>
+        <SvgText x="4" y={ldY - 3} fontSize="8" fill={T.red} opacity="0.8"
+          fontFamily="monospace">{landThreshold}G</SvgText>
+        {/* Waveform trace */}
+        <Path d={pathD} fill="none"
+          stroke={running ? T.ice : T.border2} strokeWidth="1.5" opacity="0.9"/>
+      </Svg>
+    </View>
+  );
+}
+
 // ── Bike Toggle ────────────────────────────────
 function BikeToggle({ T, bikeType, disabled, onSelect, calibrated, activeCfg }) {
   return (
@@ -551,7 +630,7 @@ function CockpitBtn({ T, label, lampColor, lampGlow, labelActive, active, disabl
   };
 
   const isLit = active || flashing;
-  const btnWidth = wide ? '100%' : (W - 24 - 8 - 24) / 2;
+  const btnWidth = wide ? '100%' : Math.floor((W - 24 - 28 - 8) / 2);
 
   return (
     <TouchableOpacity onPress={handlePress} disabled={disabled && !flash}
@@ -755,7 +834,9 @@ function CalBtn({ T, label, onPress, primary }) {
 
 // ── Styles ─────────────────────────────────────
 const s = StyleSheet.create({
-  safe:         { flex: 1 },
+  waveBox:      { borderRadius: 6, borderWidth: 1, overflow:'hidden' },
+  waveHeader:   { flexDirection:'row', justifyContent:'space-between',
+                  padding: 8, paddingHorizontal: 12, borderBottomWidth: 1 },
   scroll:       { padding: 12, gap: 10 },
   panel:        { borderRadius: 6, borderWidth: 1, padding: 12 },
   logo:         { fontSize: 22, fontWeight:'700', letterSpacing: 4, fontFamily:'monospace' },
